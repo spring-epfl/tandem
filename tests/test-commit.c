@@ -1,3 +1,7 @@
+/*
+ * Simple test program for included commitment scheme
+ */
+
 #include <stdio.h>
 #include "commit.h"
 

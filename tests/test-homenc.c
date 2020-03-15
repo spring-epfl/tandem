@@ -1,8 +1,12 @@
+/*
+ * Simple test program for the Joux-Libert encryption scheme
+ */
+
 #include <stdio.h>
 #include "homenc.h"
 
-#define MODULUS_BITS 3072
-#define PTXT_BITS 382
+#define MODULUS_BITS 2048
+#define PTXT_BITS 394
 
 int
 main (int argc, char **argv) {
@@ -26,7 +30,7 @@ main (int argc, char **argv) {
     homenc_init_ctxt(&c0);
     homenc_init_ctxt(&c1);
     homenc_init_ctxt(&c2);
-    
+
     homenc_enc(&c0, &pk, &m0, rand_state);
     homenc_enc(&c1, &pk, &m1, rand_state);
 

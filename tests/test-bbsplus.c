@@ -1,13 +1,17 @@
+/*
+ * Simple test program for BBS+ credentials implementation
+ *
+ * This script only performs basic testing.
+ */
+
 #include "bbsplus.h"
 #include "utils.h"
 
 #include <stdio.h>
 #include <relic/relic.h>
 
-#include <time.h>
-
+#define NR_MSGS 10
 #define NR_TESTS 10
-#define NR_EXPERIMENTS 100
 
 int
 main(int argc, char **argv) {
@@ -44,8 +48,6 @@ main(int argc, char **argv) {
     for(unsigned int i = 0; i < 500; i++) {
         hidden[i] = i;
     }
-
-#define NR_MSGS 10
 
     printf("\nDoing basic tests (all hidden): ");
     for(int i = 0; i < NR_TESTS; i++) {
@@ -130,54 +132,6 @@ main(int argc, char **argv) {
         bbsplus_sk_free(&sk);
     }
     printf("Test passed!\n\n\n");
-
-    printf("Doing performance tests\n");
-    clock_t tic, toc;
-
-    bbsplus_keygen(&pk, &sk, NR_MSGS);
-    for(int i = 0; i < NR_MSGS; i++) {
-        bn_rand_mod(msgs[i], pk.q);
-    }
-    bbsplus_sign(&sign, &pk, &sk, &msgs[0], NR_MSGS);
-
-    tic = clock();
-    struct bbsplus_proof proofs[NR_EXPERIMENTS];
-    for(int i = 0; i < NR_EXPERIMENTS; i++) {
-        bbsplus_prove(proofs + i, &sign, &pk, &msgs[0], NR_MSGS,
-                hidden, NR_MSGS, &L[0], lL);
-    }
-    toc = clock();
-    printf("Time per disclosure proof (all hidden): %e seconds\n", (double)(toc - tic) / CLOCKS_PER_SEC / NR_EXPERIMENTS);
-
-    tic = clock();
-    struct bbsplus_proof proofs2[NR_EXPERIMENTS];
-    for(int i = 0; i < NR_EXPERIMENTS; i++) {
-        bbsplus_prove(proofs2 + i, &sign, &pk, &msgs[0], NR_MSGS,
-                hidden, 0, &L[0], lL);
-    }
-    toc = clock();
-    printf("Time per disclosure proof (all disclosed): %e seconds\n", (double)(toc - tic) / CLOCKS_PER_SEC / NR_EXPERIMENTS);
-
-    tic = clock();
-    for(int i = 0; i < NR_EXPERIMENTS; i++) {
-        bbsplus_proof_verify(proofs + i, &pk, NR_MSGS, &L[0], lL);
-    }
-    toc = clock();
-    printf("Time per disclosure proof verification (all hidden): %e seconds\n", (double)(toc - tic) / CLOCKS_PER_SEC / NR_EXPERIMENTS);
-
-    tic = clock();
-    for(int i = 0; i < NR_EXPERIMENTS; i++) {
-        bbsplus_proof_verify(proofs2 + i, &pk, NR_MSGS, &L[0], lL);
-    }
-    toc = clock();
-    printf("Time per disclosure proof verification (all disclosed): %e seconds\n", (double)(toc - tic) / CLOCKS_PER_SEC / NR_EXPERIMENTS);
-
-    // Cleanup proofs
-    for(int i = 0; i < NR_EXPERIMENTS; i++) {
-        bbsplus_proof_free(proofs + i);
-    }
-    bbsplus_pk_free(&pk);
-    bbsplus_sk_free(&sk);
 
     return 0;
 }
