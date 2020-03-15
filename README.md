@@ -1,8 +1,10 @@
 # Tandem proof of concept
 
-This repository accompanies the paper "Tandem: Securing Keys by Using a Central Server While Preserving Privacy" by Wouter Lueks, Brinda Hampiholi, Greg Alpár, and Carmela Troncoso, which will be included in PoPETs 2020.3. This repository contains a proof of concept implementation of the timing critical Tandem protocols.
+This repository accompanies the paper *Tandem: Securing Keys by Using a Central Server While Preserving Privacy* by Wouter Lueks, Brinda Hampiholi, Greg Alpár, and Carmela Troncoso, which will be included in PoPETs 2020.3. This repository contains a proof of concept implementation of the timing critical Tandem protocols.
 
 The goal of this repository is to enable reproducing the measurements in the paper.
+
+**Warning** This code should be considered alpha quality and prototype software. The code, including the cryptography is potentially insecure. Do not use in production.
 
 ## Getting started using the Vagrant VM
 
