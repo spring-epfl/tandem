@@ -1,3 +1,10 @@
+add_executable(bench-bbsplus
+  bench-bbsplus.c
+  $<TARGET_OBJECTS:bbsplus>
+  $<TARGET_OBJECTS:utils>)
+target_link_libraries(bench-bbsplus ${RELIC} ${OPENSSL_LIBRARIES} gmp sodium)
+install(TARGETS bench-bbsplus DESTINATION ${TANDEM_INSTALL_BIN_DIR})
+
 add_executable(bench-paillier
   bench-paillier.c)
 set_target_properties(bench-paillier PROPERTIES INSTALL_RPATH ${TANDEM_INSTALL_LIB_DIR})
