@@ -1,8 +1,6 @@
 #include "tandem.h"
 #include "sodium.h"
 
-#define MODULUS_BITS 2048
-
 void
 credential_commitment_represent(g1_t A, struct bbsplus_pk *pk, bn_t s,
         bn_t sk, bn_t ctxt_hash, bn_t token_id,
