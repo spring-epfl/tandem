@@ -1,3 +1,8 @@
+/*
+ * Computes exponentiation and pairing cost for the configured RELIC pairing
+ * curve.
+ */
+
 #include <stdio.h>
 #include "tandem.h"
 #include <time.h>

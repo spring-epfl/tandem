@@ -1,11 +1,20 @@
+/*
+ * Computes computational complexity of Joux-Libert's additively-homomorphic
+ * encryption scheme for several sizes of the plaintext space.
+ *
+ * Change the defines at the top of this file to change the modulus size, the
+ * evaluated options for the plaintext space or how often the experiments are
+ * run.
+ */
 #include <gmp.h>
 #include "homenc.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-#define MODULUS_BITS 3072
+#define MODULUS_BITS 2048
 #define NR_EXPERIMENTS 100
+#define PTXT_SIZES {128, 256, 384, 394, 512}
 
 void
 run_experiment(int ptxt_bits, gmp_randstate_t rand_state);
@@ -16,14 +25,16 @@ main(int argc, char **argv) {
     gmp_randstate_t rand_state;
     gmp_randinit_default(rand_state);
 
-    int exp[] = {128, 256, 384, 394, 512};
+    printf("Modulus size: %i bits\n", MODULUS_BITS);
+
+    int exp[] = PTXT_SIZES;
 
     for(int i = 0; i < sizeof(exp) / sizeof(exp[0]); i++) {
-        printf("Experiment with k = %i\n", exp[i]);
+        printf("######## Experiment with k = %i ##########\n", exp[i]);
         run_experiment(exp[i], rand_state);
         printf("\n\n");
     }
-    
+
     return 0;
 }
 
@@ -39,17 +50,13 @@ run_experiment(int ptxt_bits, gmp_randstate_t rand_state) {
 
     // Generate some plaintexts
     struct homenc_ptxt m[NR_EXPERIMENTS];
-    printf("Generating plaintexts...");
-    fflush(stdout);
     for(int i = 0; i < NR_EXPERIMENTS; i++) {
         homenc_init_ptxt(m + i);
         mpz_urandomb((m + i)->m, rand_state, ptxt_bits);
     }
-    printf(" done\n\n");
 
     // Trial encryption
     struct homenc_ctxt c[NR_EXPERIMENTS];
-    printf("Starting encryption benchmark\n");
     tic = clock();
     for(int i = 0; i < NR_EXPERIMENTS; i++) {
         homenc_init_ctxt(c + i);
@@ -57,11 +64,10 @@ run_experiment(int ptxt_bits, gmp_randstate_t rand_state) {
     }
     toc = clock();
     time_taken = (double)(toc - tic) / CLOCKS_PER_SEC;
-    printf("Time to encrypt: %e miliseconds\n\n", time_taken * 1000.0 / NR_EXPERIMENTS);
+    printf("  Time to encrypt: %e miliseconds\n", time_taken * 1000.0 / NR_EXPERIMENTS);
 
     // Trial decryption
     struct homenc_ptxt res[NR_EXPERIMENTS];
-    printf("Starting decryption benchmark\n");
     tic = clock();
     for(int i = 0; i < NR_EXPERIMENTS; i++) {
         homenc_init_ptxt(res + i);
@@ -69,7 +75,7 @@ run_experiment(int ptxt_bits, gmp_randstate_t rand_state) {
     }
     toc = clock();
     time_taken = (double)(toc - tic) / CLOCKS_PER_SEC;
-    printf("Time to decrypt: %e miliseconds\n\n", time_taken * 1000.0 / NR_EXPERIMENTS);
+    printf("  Time to decrypt: %e miliseconds\n", time_taken * 1000.0 / NR_EXPERIMENTS);
 
     // TODO: free allocated mpz's as well
     for(int i = 0; i < NR_EXPERIMENTS; i++) {

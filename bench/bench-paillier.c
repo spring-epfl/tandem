@@ -1,10 +1,18 @@
+/*
+ * Computes computational complexity of Paillier encryption and decryption using
+ * an optimized library.
+ *
+ * Change the defines at the top of this file to change the modulus size or how
+ * often the experiments are run.
+ */
+
 #include <gmp.h>
 #include "paillier.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-#define MODULUS_BITS 3072
+#define MODULUS_BITS 2048
 #define NR_EXPERIMENTS 100
 
 int

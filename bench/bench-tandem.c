@@ -1,14 +1,38 @@
+/**
+ * Script to compute benchmarks for Tandem protocols
+ *
+ * The script takes as input the difficulty level k for the cut-and-choose
+ * parts of the protocol. A reasonable value for k in practice is k=20. In
+ * the paper we evaluate up to k=64 which gives almost 128 bits of security.
+ *
+ * The results are printed to standard out and accumulated in the file
+ * "test.log". If at any point one of the parties aborts. This script will
+ * abort as well.
+ *
+ * To run the script, simply call:
+ *
+ *       ./bench-tandem <difficulty>
+ *
+ */
+
 #include <stdio.h>
 #include "tandem.h"
 #include <time.h>
 #include <math.h>
 
+/******************************
+ **** SCRIPT CONFIGURATION ****
+ ******************************/
+
 #define MODULUS_BITS 2048
 #define PTXT_BITS 394
 
-#define NR_EXPERIMENTS 250
-#define NR_METRICS 16
+#define NR_EXPERIMENTS 100
+#define LOG_FILE "test.log"
 
+
+// Internal defines
+#define NR_METRICS 16
 #define METRIC_OBTAIN_SERVER_START 0
 #define METRIC_OBTAIN_USER_CUT 1
 #define METRIC_OBTAIN_SERVER_CHOOSE 2
@@ -25,8 +49,8 @@
 #define METRIC_GENSHARES_SERVER_TOTAL 12
 #define METRIC_GENSHARES_TOTAL 13
 
-#define METRIC_PAILLIER_ENC 14
-#define METRIC_PAILLIER_DEC 15
+#define METRIC_HOMENC_ENC 14
+#define METRIC_HOMENC_DEC 15
 
 char *metric_names[] = {
     "ObtainServerStart",
@@ -43,8 +67,8 @@ char *metric_names[] = {
     "GenSharesServerCompute",
     "GenSharesServerTotal",
     "GenSharesTotal",
-    "PaillierEnc",
-    "PaillierDec",
+    "HomEncEnc",
+    "HomEncDec",
 };
 
 #define CLOCK_START tic = clock();
@@ -121,9 +145,11 @@ main(int argc, char** argv) {
     } else {
         difficulty = atoi(argv[1]);
     }
-    printf("Difficulty is set to %zu\n", difficulty);
-    printf("Running %i experiments\n\n", NR_EXPERIMENTS);
-
+    printf("Configuration:\n");
+    printf("  Difficulty is set to k=%zu\n", difficulty);
+    printf("  Joux-Libert ciphertexts are %i bits\n", MODULUS_BITS);
+    printf("  Joux-Libert plaintexts are %i bits\n", PTXT_BITS);
+    printf("  Running %i experiments\n\n", NR_EXPERIMENTS);
 
     // Initialize relic
     if( core_init() != RLC_OK ) {
@@ -144,7 +170,7 @@ main(int argc, char** argv) {
     // Setup commitment scheme
     struct commit_pk com_pk;
     commit_keygen(&com_pk);
-    
+
     // Setup homenc scheme
     struct homenc_sk sk;
     struct homenc_pk pk;
@@ -212,10 +238,11 @@ main(int argc, char** argv) {
     bn_new(x);
 
     for(int i = 0; i < NR_EXPERIMENTS; i++) {
-        printf("Experiment %i\n", i);
         tic_total = clock();
 
-        // Setup
+        // #########################################
+        // ############## Setup() ##################
+        // #########################################
         bn_rand_mod(xu, com_pk.q);
         bn_rand_mod(xs, com_pk.q);
         bn_add(x, xu, xs);
@@ -226,11 +253,18 @@ main(int argc, char** argv) {
         tandem_setup_user(&user_state, &pk, &bbs_pk, &com_pk,
                 xu, difficulty, &rand_state, group, genh, ctx);
 
-        // TODO: replace by proper register user
+        // #########################################
+        // ############# Register() ################
+        // ####### WARNING: NOT IMPLEMENTED ########
+        // #########################################
+
         tandem_setup_fakeregister(&user_state, &server_state);
 
+        // #########################################
+        // ############# ObtainToken() #############
+        // #########################################
 
-        // Tandem server -> User 
+        // Tandem server -> User
         CLOCK_START;
         tandem_obtain_server_start(&server_start_msg, &server_obtain_state,
                 &server_state);
@@ -277,13 +311,13 @@ main(int argc, char** argv) {
             (double)(toc_total - tic_total) / CLOCKS_PER_SEC;
 
         // Record total time for user
-        measurements[METRIC_OBTAIN_USER_TOTAL][i] = 
+        measurements[METRIC_OBTAIN_USER_TOTAL][i] =
             measurements[METRIC_OBTAIN_USER_CUT][i] +
             measurements[METRIC_OBTAIN_USER_REVEAL][i] +
             measurements[METRIC_OBTAIN_USER_TOKEN][i];
 
         // Record total time for server
-        measurements[METRIC_OBTAIN_SERVER_TOTAL][i] = 
+        measurements[METRIC_OBTAIN_SERVER_TOTAL][i] =
             measurements[METRIC_OBTAIN_SERVER_START][i] +
             measurements[METRIC_OBTAIN_SERVER_CHOOSE][i] +
             measurements[METRIC_OBTAIN_SERVER_CHECK_AND_ISSUE][i];
@@ -291,7 +325,7 @@ main(int argc, char** argv) {
         // #########################################
         // ############## GenShares() ##############
         // #########################################
- 
+
         tic_total = clock();
 
         // User sends disclosure proof and ciphertexts
@@ -301,7 +335,7 @@ main(int argc, char** argv) {
 
         // Server checks ServerToken and computes key-share
         CLOCK_START;
-        int checked = 
+        int checked =
             tandem_gen_server_check_token(&stoken, &server_state);
         CLOCK_RECORD(METRIC_GENSHARES_SERVER_CHECK, i);
 
@@ -339,8 +373,6 @@ main(int argc, char** argv) {
         tandem_clear_server_state(&server_state);
     }
 
-    printf("Running HomEnc benchmarks now\n");
-
     struct homenc_ptxt *m = malloc(2 * difficulty * sizeof(struct homenc_ptxt));
     struct homenc_ctxt *c = malloc(2 * difficulty * sizeof(struct homenc_ctxt));
     struct homenc_ptxt *res = malloc(difficulty * sizeof(struct homenc_ptxt));
@@ -359,19 +391,19 @@ main(int argc, char** argv) {
             homenc_init_ctxt(c + j);
             homenc_enc(c + j, &pk, m + j, rand_state);
         }
-        CLOCK_RECORD(METRIC_PAILLIER_ENC, i);
+        CLOCK_RECORD(METRIC_HOMENC_ENC, i);
 
         // Trial decryption
         CLOCK_START;
         homenc_init_ptxt(res);
         homenc_dec(res, &pk, &sk, c);
-        CLOCK_RECORD(METRIC_PAILLIER_DEC, i);
+        CLOCK_RECORD(METRIC_HOMENC_DEC, i);
 
         homenc_clear_ptxt(res);
     }
 
     print_benchmarks(difficulty);
-    log_benchmarks(difficulty, "test.log");
+    log_benchmarks(difficulty, LOG_FILE);
 
     homenc_clear_pk(&pk);
     homenc_clear_sk(&sk);
