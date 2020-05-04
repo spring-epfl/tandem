@@ -40,7 +40,7 @@ git clone https://github.com/relic-toolkit/relic.git
 cd relic
 # Use a version of RELIC which we know works, later versions might work as well
 git checkout 13f88f6e6fa3c54b48309baa16cd19c61b4bd850
-./preset/x64-pbc-128-b12.sh -DCMAKE_INSTALL_PREFIX=$HOME/local/
+./preset/x64-pbc-bls381.sh -DCMAKE_INSTALL_PREFIX=$HOME/local/
 make
 make install
 ```
