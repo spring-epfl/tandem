@@ -6,7 +6,28 @@ The goal of this repository is to enable reproducing the measurements in the pap
 
 **Warning** This code should be considered alpha quality and prototype software. The code, including the cryptography is potentially insecure. Do not use in production.
 
-## Getting started using the Vagrant VM
+## Installing dependencies
+
+We describe three ways to install dependencies: (1) using a docker image, (2) using a Vagrant VM, and (3) by installing them directly on Linux. All methods should give the same result. Choose your favourite.
+
+### Getting started using Docker
+
+This repository includes a Docker file to quickly get started with development. First build the docker image which includes the necessary dependencies:
+
+```
+docker build --tag tandem-docker:v0.1 .
+```
+
+Thereafter you can open a shell in the docker image by running:
+
+```
+docker run -v `pwd`:/tandem -it tandem-docker:v0.1 /bin/bash
+```
+
+The source files of this repository are then in the `/tandem` directory.
+
+
+### Getting started using the Vagrant VM
 
 This repository includes a Vagrant virtual machine that will install and configure all the necessary dependencies. To use it, first install [Vagrant](https://www.vagrantup.com/) using your package manager of choice, and then call (from the root of this repository):
 
@@ -22,7 +43,7 @@ vagrant ssh
 
 The source files of this repository are in the `/vagrant` directory.
 
-## Installing dependencies by hand (Linux only)
+### Installing dependencies by hand (Linux only)
 
 Alternatively, and only on recent Linux machine, you can also try to install the
 dependencies by hand. Compare with the `tools/bootstrap-relic.sh` script that is
