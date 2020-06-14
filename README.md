@@ -15,13 +15,13 @@ We describe three ways to install dependencies: (1) using a docker image, (2) us
 This repository includes a Docker file to quickly get started with development. First build the docker image which includes the necessary dependencies:
 
 ```
-docker build --tag tandem-docker:v0.1 .
+docker build --tag tandem-docker .
 ```
 
-Thereafter you can open a shell in the docker image by running:
+Thereafter you can open a shell in the docker image by running (from the root of the repository):
 
 ```
-docker run -v `pwd`:/tandem -it tandem-docker:v0.1 /bin/bash
+docker run -v `pwd`:/tandem -it tandem-docker /bin/bash
 ```
 
 The source files of this repository are then in the `/tandem` directory.
